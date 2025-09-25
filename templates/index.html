@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}首頁 - MES 製造執行系統{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-light p-4 rounded">
+            <h1 class="display-4">
+                <i class="fas fa-industry text-primary me-3"></i>
+                MES 製造執行系統
+            </h1>
+            <p class="lead">歡迎使用製造執行系統示範版本。本系統模擬製造業的核心功能，包括生產流程監控、品質管理和設備維護管理。</p>
+            <hr class="my-4">
+            <p class="mb-4">系統特色：全記憶體模擬運行，無需資料庫，適合學習和示範用途。</p>
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary btn-lg" href="{{ url_for('production') }}" role="button">
+                    <i class="fas fa-cogs me-2"></i>開始使用
+                </a>
+                <button class="btn btn-outline-secondary btn-lg" onclick="refreshStats()">
+                    <i class="fas fa-sync-alt me-2"></i>刷新數據
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <!-- 生產統計卡片 -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>生產流程統計
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h4 text-primary mb-0">{{ stats.production.total }}</div>
+                        <small class="text-muted">總任務</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-success mb-0">{{ stats.production.in_progress }}</div>
+                        <small class="text-muted">進行中</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-info mb-0">{{ "%.1f"|format(stats.production.completion_rate) }}%</div>
+                        <small class="text-muted">完成率</small>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 8px;">
+                    <div class="progress-bar bg-primary" role="progressbar"
+                         style="width: {{ stats.production.completion_rate }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 品質統計卡片 -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>品質統計
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h4 text-success mb-0">{{ stats.quality.total }}</div>
+                        <small class="text-muted">總檢查</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-success mb-0">{{ stats.quality.qualified }}</div>
+                        <small class="text-muted">合格</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-warning mb-0">{{ "%.1f"|format(stats.quality.qualification_rate) }}%</div>
+                        <small class="text-muted">合格率</small>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {{ stats.quality.qualification_rate }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 設備統計卡片 -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>設備狀態
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h4 text-warning mb-0">{{ stats.equipment.total }}</div>
+                        <small class="text-muted">總設備</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-success mb-0">{{ stats.equipment.running }}</div>
+                        <small class="text-muted">運行中</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-danger mb-0">{{ stats.equipment.maintenance }}</div>
+                        <small class="text-muted">維護中</small>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success">運行率: {{ "%.1f"|format(stats.equipment.running / stats.equipment.total * 100 if stats.equipment.total > 0 else 0) }}%</span>
+                        <small class="text-muted">{{ stats.equipment.total - stats.equipment.running - stats.equipment.maintenance }} 待命</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 功能介紹 -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>系統功能介紹
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-cogs fa-3x text-primary mb-3"></i>
+                            <h5>生產流程監控</h5>
+                            <p class="text-muted">即時監控生產任務狀態，包含開始、暫停、完成等操作</p>
+                            <a href="{{ url_for('production') }}" class="btn btn-outline-primary">進入管理</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-clipboard-check fa-3x text-success mb-3"></i>
+                            <h5>品質管理</h5>
+                            <p class="text-muted">品質檢驗數據輸入與統計分析，追蹤產品品質狀況</p>
+                            <a href="{{ url_for('quality') }}" class="btn btn-outline-success">進入管理</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-tools fa-3x text-warning mb-3"></i>
+                            <h5>設備維護管理</h5>
+                            <p class="text-muted">設備狀態監控與維護記錄管理，確保設備正常運行</p>
+                            <a href="{{ url_for('equipment') }}" class="btn btn-outline-warning">進入管理</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshStats() {
+    location.reload();
+}
+</script>
+{% endblock %}

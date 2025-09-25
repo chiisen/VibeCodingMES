@@ -1,0 +1,444 @@
+/* MES 製造執行系統樣式 */
+
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --secondary-color: #6c757d;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    color: var(--dark-color);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.25rem;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none;
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.125);
+    font-weight: 600;
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* 首頁樣式 */
+.jumbotron {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.jumbotron h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.jumbotron .lead {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* 統計卡片樣式 */
+.stats-card {
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-icon {
+    opacity: 0.8;
+}
+
+/* 生產流程頁面樣式 */
+.production-table th {
+    background-color: var(--light-color);
+    border-top: none;
+    font-weight: 600;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+/* 品質管理頁面樣式 */
+.quality-chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.defect-checkbox {
+    margin-bottom: 8px;
+}
+
+/* 設備維護頁面樣式 */
+.equipment-card {
+    transition: all 0.3s ease;
+}
+
+.equipment-card:hover {
+    transform: translateY(-2px);
+}
+
+.equipment-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.maintenance-record {
+    background-color: var(--light-color);
+    border-left: 4px solid var(--info-color);
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+/* 表格樣式 */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    vertical-align: middle;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* 圖表容器 */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .jumbotron h1 {
+        font-size: 2rem;
+    }
+
+    .jumbotron .lead {
+        font-size: 1rem;
+    }
+
+    .btn-group {
+        flex-direction: column;
+    }
+
+    .btn-group .btn {
+        margin-right: 0;
+        margin-bottom: 2px;
+        width: 100%;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* 動畫效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* 滾動條樣式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--light-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* 工具提示 */
+.tooltip-inner {
+    background-color: var(--dark-color);
+    color: white;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: var(--dark-color);
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: var(--dark-color);
+}
+
+.tooltip.bs-tooltip-left .tooltip-arrow::before {
+    border-left-color: var(--dark-color);
+}
+
+.tooltip.bs-tooltip-right .tooltip-arrow::before {
+    border-right-color: var(--dark-color);
+}
+
+/* 載入動畫 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 通知樣式 */
+.alert {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}
+
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    color: var(--info-color);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+/* 導航欄樣式 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 頁面標題樣式 */
+.page-title {
+    color: var(--dark-color);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+/* 表單樣式 */
+.form-label {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.form-control, .form-select {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* 按鈕組樣式 */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* 進度條樣式 */
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* 圖標樣式 */
+.fas, .far {
+    transition: transform 0.3s ease;
+}
+
+.btn:hover .fas, .btn:hover .far {
+    transform: scale(1.1);
+}
+
+/* 卡片內部間距調整 */
+.card-body .row {
+    margin-bottom: 0.5rem;
+}
+
+.card-body .row:last-child {
+    margin-bottom: 0;
+}
+
+/* 列表樣式 */
+.list-group-item {
+    border: 1px solid rgba(0,0,0,0.125);
+    transition: background-color 0.3s ease;
+}
+
+.list-group-item:hover {
+    background-color: var(--light-color);
+}
+
+/* 徽章樣式 */
+.badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* 統計數字樣式 */
+.display-4, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-weight: 600;
+}
+
+/* 文字大小調整 */
+.text-small {
+    font-size: 0.875rem;
+}
+
+.text-large {
+    font-size: 1.25rem;
+}
+
+/* 間距調整 */
+.mb-6 {
+    margin-bottom: 4rem;
+}
+
+.mt-6 {
+    margin-top: 4rem;
+}
+
+/* 邊框樣式 */
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+.border-success {
+    border-color: var(--success-color) !important;
+}
+
+.border-warning {
+    border-color: var(--warning-color) !important;
+}
+
+.border-danger {
+    border-color: var(--danger-color) !important;
+}
+
+.border-info {
+    border-color: var(--info-color) !important;
+}
+
+/* 背景色樣式 */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6610f2 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, var(--warning-color) 0%, #fd7e14 100%);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #e83e8c 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, var(--info-color) 0%, #6f42c1 100%);
+}

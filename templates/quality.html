@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block title %}品質管理 - MES 製造執行系統{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-clipboard-check text-success me-2"></i>
+        品質管理
+    </h2>
+    <div>
+        <button class="btn btn-outline-success" onclick="refreshPage()">
+            <i class="fas fa-sync-alt me-1"></i>刷新
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 品質統計卡片 -->
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>品質統計
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="h2 text-success mb-0">{{ stats.qualification_rate }}%</div>
+                <p class="text-muted mb-0">合格率</p>
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <div class="h5 text-success mb-0">{{ stats.qualified }}</div>
+                        <small class="text-muted">合格</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 text-danger mb-0">{{ stats.unqualified }}</div>
+                        <small class="text-muted">不合格</small>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {{ stats.qualification_rate }}%"></div>
+                    <div class="progress-bar bg-danger" role="progressbar"
+                         style="width: {{ 100 - stats.qualification_rate }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加品檢記錄表單 -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>新增品檢記錄
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="quality-form">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="product" class="form-label">產品名稱</label>
+                            <input type="text" class="form-control" id="product" name="product" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="batch" class="form-label">批次號</label>
+                            <input type="text" class="form-control" id="batch" name="batch" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="inspector" class="form-label">檢驗員</label>
+                            <input type="text" class="form-control" id="inspector" name="inspector" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="result" class="form-label">檢驗結果</label>
+                            <select class="form-select" id="result" name="result" required>
+                                <option value="">選擇結果</option>
+                                <option value="合格">合格</option>
+                                <option value="不合格">不合格</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">缺陷類型</label>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="defects[]" value="外觀缺陷" id="defect1">
+                                    <label class="form-check-label" for="defect1">外觀缺陷</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="defects[]" value="尺寸不符" id="defect2">
+                                    <label class="form-check-label" for="defect2">尺寸不符</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="defects[]" value="功能異常" id="defect3">
+                                    <label class="form-check-label" for="defect3">功能異常</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="defects[]" value="其他" id="defect4">
+                                    <label class="form-check-label" for="defect4">其他</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>保存記錄
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i>重置
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 品檢記錄列表 -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>品檢記錄列表
+                </h5>
+                <span class="badge bg-info">共 {{ records|length }} 條記錄</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>記錄ID</th>
+                                <th>產品名稱</th>
+                                <th>批次號</th>
+                                <th>檢驗員</th>
+                                <th>檢驗時間</th>
+                                <th>結果</th>
+                                <th>缺陷類型</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                            <tr>
+                                <td>{{ record.id }}</td>
+                                <td>
+                                    <strong>{{ record.product }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ record.batch }}</span>
+                                </td>
+                                <td>{{ record.inspector }}</td>
+                                <td>
+                                    <small class="text-muted">{{ record.check_time }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge {% if record.result == '合格' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ record.result }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if record.defects %}
+                                        {% for defect in record.defects %}
+                                            <span class="badge bg-warning me-1">{{ defect }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">無缺陷</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 品質趨勢圖表 -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>品質趨勢分析
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <canvas id="qualityChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">品質指標</h6>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>總檢查數:</span>
+                                        <strong>{{ stats.total }}</strong>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>合格數:</span>
+                                        <strong class="text-success">{{ stats.qualified }}</strong>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>不合格數:</span>
+                                        <strong class="text-danger">{{ stats.unqualified }}</strong>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>合格率:</span>
+                                        <strong class="text-info">{{ "%.1f"|format(stats.qualification_rate) }}%</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.getElementById('quality-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch('/quality/add', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('品檢記錄添加成功', 'success');
+            // 重新載入頁面以顯示新記錄
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert(data.message || '添加失敗', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('添加失敗', 'danger');
+    });
+});
+
+function refreshPage() {
+    location.reload();
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// 品質趨勢圖表
+const ctx = document.getElementById('qualityChart').getContext('2d');
+const qualityChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+        datasets: [{
+            label: '合格率 (%)',
+            data: [95, 92, 98, 94, 96, {{ stats.qualification_rate }}],
+            borderColor: 'rgb(25, 135, 84)',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            tension: 0.1,
+            fill: true
+        }, {
+            label: '不合格率 (%)',
+            data: [5, 8, 2, 6, 4, {{ 100 - stats.qualification_rate }}],
+            borderColor: 'rgb(220, 53, 69)',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.1,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: '品質趨勢分析'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

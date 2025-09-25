@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}設備維護管理 - MES 製造執行系統{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-tools text-warning me-2"></i>
+        設備維護管理
+    </h2>
+    <div>
+        <button class="btn btn-outline-warning" onclick="refreshPage()">
+            <i class="fas fa-sync-alt me-1"></i>刷新
+        </button>
+    </div>
+</div>
+
+<!-- 設備狀態概覽 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <i class="fas fa-cogs fa-2x text-primary mb-2"></i>
+                <h4 class="text-primary">{{ equipment|length }}</h4>
+                <p class="text-muted mb-0">總設備數</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <i class="fas fa-play-circle fa-2x text-success mb-2"></i>
+                <h4 class="text-success" id="running-count">
+                    {{ equipment|selectattr('status', 'equalto', '運行中')|list|length }}
+                </h4>
+                <p class="text-muted mb-0">運行中</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <i class="fas fa-pause-circle fa-2x text-warning mb-2"></i>
+                <h4 class="text-warning" id="maintenance-count">
+                    {{ equipment|selectattr('status', 'equalto', '維修中')|list|length }}
+                </h4>
+                <p class="text-muted mb-0">維護中</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-secondary">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x text-secondary mb-2"></i>
+                <h4 class="text-secondary" id="standby-count">
+                    {{ equipment|selectattr('status', 'equalto', '待命')|list|length }}
+                </h4>
+                <p class="text-muted mb-0">待命</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 設備列表 -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>設備列表
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for eq in equipment %}
+            <div class="col-md-6 mb-4">
+                <div class="card border {% if eq.status == '運行中' %}border-success{% elif eq.status == '維修中' %}border-warning{% else %}border-secondary{% endif %}">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-cog me-2"></i>{{ eq.name }}
+                        </h6>
+                        <span class="badge {% if eq.status == '運行中' %}bg-success{% elif eq.status == '維修中' %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {{ eq.status }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">設備類型</small>
+                                <div>{{ eq.type }}</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">最後維護</small>
+                                <div>{{ eq.last_maintenance }}</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">下次維護</small>
+                                <div>{{ eq.next_maintenance }}</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">維護記錄</small>
+                                <div><span class="badge bg-info">{{ eq.maintenance_records|length }}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 維護記錄 -->
+                        {% if eq.maintenance_records %}
+                        <div class="mb-3">
+                            <small class="text-muted">最近維護記錄</small>
+                            <div class="mt-2">
+                                {% for record in eq.maintenance_records[-3:] %}
+                                <div class="border rounded p-2 mb-1">
+                                    <div class="d-flex justify-content-between">
+                                        <small>{{ record.date }}</small>
+                                        <small class="text-muted">{{ record.type }}</small>
+                                    </div>
+                                    <small class="text-muted">{{ record.description }}</small>
+                                    <br>
+                                    <small class="text-info">維護員: {{ record.technician }}</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- 操作按鈕 -->
+                        <div class="d-flex gap-2">
+                            {% if eq.status == '運行中' %}
+                            <button class="btn btn-sm btn-warning" onclick="updateEquipmentStatus({{ eq.id }}, 'maintenance')">
+                                <i class="fas fa-wrench me-1"></i>開始維護
+                            </button>
+                            {% elif eq.status == '維修中' %}
+                            <button class="btn btn-sm btn-success" onclick="updateEquipmentStatus({{ eq.id }}, 'repair')">
+                                <i class="fas fa-play me-1"></i>恢復運行
+                            </button>
+                            {% else %}
+                            <button class="btn btn-sm btn-info" onclick="updateEquipmentStatus({{ eq.id }}, 'standby')">
+                                <i class="fas fa-pause me-1"></i>設為待命
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- 維護統計 -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>維護統計
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="maintenanceChart" width="300" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-check me-2"></i>維護提醒
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for eq in equipment %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ eq.name }}</strong>
+                            <br>
+                            <small class="text-muted">下次維護: {{ eq.next_maintenance }}</small>
+                        </div>
+                        <span class="badge {% if eq.status == '運行中' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ eq.status }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 設備利用率圖表 -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>設備利用率分析
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="utilizationChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function updateEquipmentStatus(equipmentId, action) {
+    const formData = new FormData();
+    formData.append('action', action);
+
+    fetch(`/equipment/update/${equipmentId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('設備狀態更新成功', 'success');
+            // 重新載入頁面以顯示更新後的狀態
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert(data.message || '更新失敗', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('更新失敗', 'danger');
+    });
+}
+
+function refreshPage() {
+    location.reload();
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// 維護統計圖表
+const maintenanceCtx = document.getElementById('maintenanceChart').getContext('2d');
+const maintenanceChart = new Chart(maintenanceCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['運行中', '維護中', '待命'],
+        datasets: [{
+            data: [
+                {{ equipment|selectattr('status', 'equalto', '運行中')|list|length }},
+                {{ equipment|selectattr('status', 'equalto', '維修中')|list|length }},
+                {{ equipment|selectattr('status', 'equalto', '待命')|list|length }}
+            ],
+            backgroundColor: [
+                'rgb(25, 135, 84)',
+                'rgb(255, 193, 7)',
+                'rgb(108, 117, 125)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// 設備利用率圖表
+const utilizationCtx = document.getElementById('utilizationChart').getContext('2d');
+const utilizationChart = new Chart(utilizationCtx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for eq in equipment %}
+            '{{ eq.name }}',
+            {% endfor %}
+        ],
+        datasets: [{
+            label: '運行時間 (小時)',
+            data: [
+                {% for eq in equipment %}
+                {% if eq.status == '運行中' %}24{% else %}0{% endif %},
+                {% endfor %}
+            ],
+            backgroundColor: 'rgba(25, 135, 84, 0.8)',
+            borderColor: 'rgb(25, 135, 84)',
+            borderWidth: 1
+        }, {
+            label: '維護時間 (小時)',
+            data: [
+                {% for eq in equipment %}
+                {% if eq.status == '維修中' %}8{% else %}0{% endif %},
+                {% endfor %}
+            ],
+            backgroundColor: 'rgba(255, 193, 7, 0.8)',
+            borderColor: 'rgb(255, 193, 7)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: {
+                stacked: true
+            },
+            y: {
+                stacked: true,
+                beginAtZero: true,
+                max: 24
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: '今日設備利用率'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

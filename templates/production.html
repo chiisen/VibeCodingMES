@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}生產流程監控 - MES 製造執行系統{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-cogs text-primary me-2"></i>
+        生產流程監控
+    </h2>
+    <div>
+        <button class="btn btn-outline-primary" onclick="refreshPage()">
+            <i class="fas fa-sync-alt me-1"></i>刷新
+        </button>
+    </div>
+</div>
+
+<!-- 生產任務列表 -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>生產任務列表
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>任務ID</th>
+                        <th>任務名稱</th>
+                        <th>生產階段</th>
+                        <th>狀態</th>
+                        <th>進度</th>
+                        <th>開始時間</th>
+                        <th>完成時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr id="task-row-{{ task.id }}">
+                        <td>{{ task.id }}</td>
+                        <td>
+                            <strong>{{ task.name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ task.stage }}</span>
+                        </td>
+                        <td>
+                            <span id="status-{{ task.id }}" class="badge {% if task.status == '待開始' %}bg-secondary{% elif task.status == '進行中' %}bg-success{% elif task.status == '暫停' %}bg-warning{% elif task.status == '完成' %}bg-primary{% endif %}">
+                                {{ task.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress" style="width: 100px;">
+                                <div class="progress-bar {% if task.status == '完成' %}bg-primary{% elif task.status == '進行中' %}bg-success{% else %}bg-secondary{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ task.progress }}%"
+                                     id="progress-{{ task.id }}">
+                                    {{ task.progress }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td id="start-time-{{ task.id }}">
+                            {% if task.start_time %}
+                                <small class="text-muted">{{ task.start_time }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td id="end-time-{{ task.id }}">
+                            {% if task.end_time %}
+                                <small class="text-muted">{{ task.end_time }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if task.status == '待開始' %}
+                                <button class="btn btn-success" onclick="updateTaskStatus({{ task.id }}, 'start')">
+                                    <i class="fas fa-play me-1"></i>開始
+                                </button>
+                                {% elif task.status == '進行中' %}
+                                <button class="btn btn-warning" onclick="updateTaskStatus({{ task.id }}, 'pause')">
+                                    <i class="fas fa-pause me-1"></i>暫停
+                                </button>
+                                {% elif task.status == '暫停' %}
+                                <button class="btn btn-info" onclick="updateTaskStatus({{ task.id }}, 'resume')">
+                                    <i class="fas fa-play me-1"></i>繼續
+                                </button>
+                                {% endif %}
+
+                                {% if task.status != '完成' %}
+                                <button class="btn btn-primary" onclick="updateTaskStatus({{ task.id }}, 'complete')">
+                                    <i class="fas fa-check me-1"></i>完成
+                                </button>
+                                {% endif %}
+
+                                <button class="btn btn-outline-secondary" onclick="updateTaskStatus({{ task.id }}, 'reset')">
+                                    <i class="fas fa-undo me-1"></i>重置
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 生產統計摘要 -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>生產統計
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h3 text-primary mb-0" id="total-tasks">{{ tasks|length }}</div>
+                        <small class="text-muted">總任務數</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h3 text-success mb-0" id="completed-tasks">
+                            {{ tasks|selectattr('status', 'equalto', '完成')|list|length }}
+                        </div>
+                        <small class="text-muted">已完成</small>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-primary" role="progressbar"
+                             id="completion-progress"
+                             style="width: {{ (tasks|selectattr('status', 'equalto', '完成')|list|length / tasks|length * 100) if tasks else 0 }}%"></div>
+                    </div>
+                    <small class="text-muted mt-1">
+                        完成率: <span id="completion-rate">{{ "%.1f"|format((tasks|selectattr('status', 'equalto', '完成')|list|length / tasks|length * 100) if tasks else 0) }}%</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>即時狀態
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h4 text-success mb-0" id="running-count">
+                            {{ tasks|selectattr('status', 'equalto', '進行中')|list|length }}
+                        </div>
+                        <small class="text-muted">運行中</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-warning mb-0" id="paused-count">
+                            {{ tasks|selectattr('status', 'equalto', '暫停')|list|length }}
+                        </div>
+                        <small class="text-muted">暫停中</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 text-secondary mb-0" id="pending-count">
+                            {{ tasks|selectattr('status', 'equalto', '待開始')|list|length }}
+                        </div>
+                        <small class="text-muted">待開始</small>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">最後更新: <span id="last-update">{{ moment().format('HH:mm:ss') }}</span></small>
+                        <button class="btn btn-sm btn-outline-info" onclick="refreshPage()">
+                            <i class="fas fa-sync-alt me-1"></i>刷新
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateTaskStatus(taskId, action) {
+    fetch(`/production/update/${taskId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=${action}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 更新UI
+            updateTaskUI(taskId, data.task);
+            showAlert('操作成功', 'success');
+        } else {
+            showAlert(data.message || '操作失敗', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('操作失敗', 'danger');
+    });
+}
+
+function updateTaskUI(taskId, task) {
+    // 更新狀態徽章
+    const statusBadge = document.getElementById(`status-${taskId}`);
+    statusBadge.textContent = task.status;
+    statusBadge.className = `badge ${getStatusBadgeClass(task.status)}`;
+
+    // 更新進度條
+    const progressBar = document.getElementById(`progress-${taskId}`);
+    progressBar.style.width = task.progress + '%';
+    progressBar.textContent = task.progress + '%';
+    progressBar.className = `progress-bar ${getProgressBarClass(task.status)}`;
+
+    // 更新時間
+    const startTimeEl = document.getElementById(`start-time-${taskId}`);
+    startTimeEl.innerHTML = task.start_time ? `<small class="text-muted">${task.start_time}</small>` : '<span class="text-muted">-</span>';
+
+    const endTimeEl = document.getElementById(`end-time-${taskId}`);
+    endTimeEl.innerHTML = task.end_time ? `<small class="text-muted">${task.end_time}</small>` : '<span class="text-muted">-</span>';
+
+    // 更新統計數據
+    updateStatistics();
+}
+
+function getStatusBadgeClass(status) {
+    switch(status) {
+        case '待開始': return 'bg-secondary';
+        case '進行中': return 'bg-success';
+        case '暫停': return 'bg-warning';
+        case '完成': return 'bg-primary';
+        default: return 'bg-secondary';
+    }
+}
+
+function getProgressBarClass(status) {
+    switch(status) {
+        case '完成': return 'bg-primary';
+        case '進行中': return 'bg-success';
+        default: return 'bg-secondary';
+    }
+}
+
+function updateStatistics() {
+    // 重新計算統計數據
+    const rows = document.querySelectorAll('#task-row-' + taskId);
+    const totalTasks = {{ tasks|length }};
+    const completedTasks = document.querySelectorAll('.badge.bg-primary').length;
+    const runningTasks = document.querySelectorAll('.badge.bg-success').length;
+    const pausedTasks = document.querySelectorAll('.badge.bg-warning').length;
+
+    document.getElementById('completed-tasks').textContent = completedTasks;
+    document.getElementById('running-count').textContent = runningTasks;
+    document.getElementById('paused-count').textContent = pausedTasks;
+    document.getElementById('pending-count').textContent = totalTasks - completedTasks - runningTasks - pausedTasks;
+
+    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks * 100) : 0;
+    document.getElementById('completion-rate').textContent = completionRate.toFixed(1) + '%';
+    document.getElementById('completion-progress').style.width = completionRate + '%';
+
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+}
+
+function refreshPage() {
+    location.reload();
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// 定期刷新統計數據
+setInterval(updateStatistics, 5000);
+</script>
+{% endblock %}
